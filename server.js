@@ -19,6 +19,8 @@ const allowedOrigins = [
   "http://localhost:8080",
   "http://localhost:8081",
   "http://localhost:8081/",
+  "https://ask-it-frontend.onrender.com/",
+  "https://ask-it-frontend.onrender.com",
   "http://localhost:3000",
   "https://help-desk-frontend-three.vercel.app",
 ];
