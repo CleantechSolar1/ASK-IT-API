@@ -3,11 +3,7 @@ const { errorResponse } = require("./responseHandler");
 
 const authMiddleware = (req, res, next) => {
   try {
-    console.log("Headers: ", req.headers);
-    console.log("Cookies: ", req.cookies);
-    let token = req.cookies.token; ß
-
-    console.log("++++ token +++++", token)
+    let token = req.cookies.token;
 
     // Fallback to Authorization header if no cookie (e.g. for API testing)
     if (!token && req.headers.authorization) {
