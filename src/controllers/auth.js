@@ -11,7 +11,7 @@ const {
 
 const setTokenCookie = (res, token) => {
   const isProd = process.env.NODE_ENV === "production";
-  
+
   res.cookie("token", token, {
     httpOnly: true,
     secure: isProd, // Must be true for SameSite=none
@@ -75,8 +75,15 @@ const microsoftCallback = async (req, res) => {
     const encodedUser = encodeURIComponent(JSON.stringify(user));
     const frontendBaseUrl = process.env.FRONTEND_URL || "http://localhost:8080";
 
+    // Also set the cookie for same-site / non-iframe browser contexts
     setTokenCookie(res, token);
-    const frontendUrl = `${frontendBaseUrl}/auth/microsoft/callback?user=${encodedUser}`;
+
+    // Include the token in the redirect URL so the frontend can capture it.
+    // Required because the httpOnly cookie above is treated as a third-party
+    // cookie by browsers (Render backend → Vercel frontend redirect) and gets
+    // blocked. The frontend stores it in Vuex memory (not localStorage) and
+    // sends it via Authorization: Bearer on every subsequent request.
+    const frontendUrl = `${frontendBaseUrl}/auth/microsoft/callback?token=${encodeURIComponent(token)}&user=${encodedUser}`;
     return res.redirect(frontendUrl);
   } catch (error) {
     const frontendBaseUrl = process.env.FRONTEND_URL || "http://localhost:8080";
@@ -118,13 +125,13 @@ const getMe = async (req, res) => {
     // Ideally fetch fresh from DB, but token data is fine for basic check.
     const User = require("../models/user");
     const user = await User.findById(req.user.id).populate("organizationId", "name");
-    
+
     if (!user) {
       return errorResponse(res, "User not found", 404);
     }
-    
+
     const { resolveRole } = require("../services/auth"); // Assuming this is exported or we can just use req.user.role if it's already resolved in middleware
-    
+
     return successResponse(res, {
       user: {
         email: user.email,
