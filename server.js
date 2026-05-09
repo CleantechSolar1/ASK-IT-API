@@ -15,17 +15,14 @@ const app = express();
 connectDB();
 
 const allowedOrigins = [
-  "http://localhost:8080/",
   "http://localhost:8080",
   "http://localhost:8081",
-  "http://localhost:8081/",
-  "https://ask-it-frontend.onrender.com/",
-  "https://ask-it-frontend.onrender.com",
-  "https://ask-it-frontend.vercel.app/",
-  "https://ask-it-frontend.vercel.app",
   "http://localhost:3000",
+  "https://ask-it-frontend.onrender.com",
+  "https://ask-it-frontend.vercel.app",
   "https://help-desk-frontend-three.vercel.app",
-];
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
   cors({

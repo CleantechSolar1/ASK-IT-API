@@ -9,12 +9,13 @@ const {
   errorResponse,
 } = require("../middlewares/responseHandler");
 
-// Helper to set cookie
 const setTokenCookie = (res, token) => {
+  const isProd = process.env.NODE_ENV === "production";
+  
   res.cookie("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production", // true in prod (requires HTTPS)
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // 'none' for cross-site in prod
+    secure: isProd, // Must be true for SameSite=none
+    sameSite: isProd ? "none" : "lax",
     maxAge: 24 * 60 * 60 * 1000, // 1 day
   });
 };
@@ -101,10 +102,11 @@ const teamsSSO = async (req, res) => {
 };
 
 const logout = (req, res) => {
+  const isProd = process.env.NODE_ENV === "production";
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
   });
   return successResponse(res, null, "Logged out successfully");
 };
