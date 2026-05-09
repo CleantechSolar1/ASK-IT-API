@@ -94,8 +94,8 @@ const teamsSSO = async (req, res) => {
     }
 
     const data = await teamsSSOService(token);
-    setTokenCookie(res, data.token);
-    return successResponse(res, { user: data.user }, "Teams SSO successful");
+    setTokenCookie(res, data.token); // still set for non-iframe contexts
+    return successResponse(res, { user: data.user, token: data.token }, "Teams SSO successful");
   } catch (error) {
     return errorResponse(res, error.message, 401);
   }
