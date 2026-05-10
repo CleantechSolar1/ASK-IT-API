@@ -60,6 +60,14 @@ const ticketSchema = new mongoose.Schema(
     department: {
       type: String,
     },
+
+    attachments: [
+      {
+        name: String,
+        driveItemId: String,
+        mimeType: String,
+      },
+    ],
   },
   { timestamps: true },
 );

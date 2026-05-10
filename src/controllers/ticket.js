@@ -85,25 +85,67 @@ const exportTicketsCSV = async (req, res) => {
   }
 };
 
+const axios = require("axios");
+const { getAccessToken } = require("../services/microsoftGraph");
+
 const createTicket = async (req, res) => {
   try {
     const organizationId = req.user.organizationId;
     if (!organizationId) {
-      return errorResponse(
-        res,
-        "Session invalid. Please log in again.",
-        401,
-      );
+      return errorResponse(res, "Session invalid. Please log in again.", 401);
     }
+
+    // Prepare files for OneDrive if any exist
+    const uploadedAttachments = [];
+    if (req.files && req.files.length > 0) {
+      try {
+        const token = await getAccessToken();
+        const senderEmail = process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
+        // Create a unique folder for this request, assuming ticketId isn't fully generated yet
+        // Wait, ticketId is generated inside createTicketService!
+        // We should let the service handle the upload, or pass the files to the service.
+        // Let's pass the files to the service!
+      } catch(e) {
+        // Will refactor this to pass files to service instead
+      }
+    }
+
     const ticket = await createTicketService(
       req.body,
       req.user.id,
       organizationId,
+      req.files // Pass files to service
     );
 
     return successResponse(res, ticket, "Ticket created successfully", 201);
   } catch (error) {
     return errorResponse(res, error.message);
+  }
+};
+
+const getAttachment = async (req, res) => {
+  try {
+    const { driveItemId } = req.params;
+    const token = await getAccessToken();
+    const senderEmail = process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
+
+    // Microsoft Graph endpoint to get file content stream
+    const endpoint = `https://graph.microsoft.com/v1.0/users/${senderEmail}/drive/items/${driveItemId}/content`;
+
+    const response = await axios({
+      method: 'GET',
+      url: endpoint,
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      responseType: 'stream'
+    });
+
+    // Pipe the stream from Microsoft Graph directly to the client
+    response.data.pipe(res);
+  } catch (error) {
+    console.error("[Graph] Attachment fetch error:", error.message);
+    res.status(404).send("Image not found or access denied");
   }
 };
 
@@ -198,4 +240,5 @@ module.exports = {
   updateTicketStatus,
   delegateTicket,
   exportTicketsCSV,
+  getAttachment,
 };

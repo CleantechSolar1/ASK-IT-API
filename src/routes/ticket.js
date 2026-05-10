@@ -11,9 +11,14 @@ const {
   updateTicketStatus,
   delegateTicket,
   exportTicketsCSV,
+  getAttachment,
 } = require("../controllers/ticket");
 
-router.post("/", authMiddleware, createTicket);
+const multer = require("multer");
+const upload = multer({ storage: multer.memoryStorage() });
+
+router.post("/", authMiddleware, upload.array("attachments", 5), createTicket);
+router.get("/attachment/:driveItemId", authMiddleware, getAttachment);
 
 router.get("/my", authMiddleware, getMyTickets);
 

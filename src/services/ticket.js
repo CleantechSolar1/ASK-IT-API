@@ -14,7 +14,7 @@ const SubAdmin = require("../models/subAdmin");
 const ITSUPPORT_EMAIL =
   process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
 
-const createTicketService = async (payload, userId, organizationId) => {
+const createTicketService = async (payload, userId, organizationId, files = null) => {
   const ticketId = generateTicketId();
 
   const specialistEmail = getRoutingEmail(payload.category, payload.priority);
@@ -34,7 +34,7 @@ const createTicketService = async (payload, userId, organizationId) => {
     }
   }
 
-  const ticket = await Ticket.create({
+  const ticketData = {
     ticketId,
     userId,
     organizationId,
@@ -47,7 +47,42 @@ const createTicketService = async (payload, userId, organizationId) => {
     country: payload.country,
     assignedToEmail: specialistEmail || ITSUPPORT_EMAIL,
     assignedToName: assignedToName,
-  });
+  };
+
+  // Upload attachments to OneDrive
+  if (files && files.length > 0) {
+    const { getAccessToken } = require("./microsoftGraph");
+    const axios = require("axios");
+    try {
+      const token = await getAccessToken();
+      const senderEmail = process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
+      const attachments = [];
+
+      for (const file of files) {
+        try {
+          const endpoint = `https://graph.microsoft.com/v1.0/users/${senderEmail}/drive/root:/ticket-attachments/${ticketId}/${encodeURIComponent(file.originalname)}:/content`;
+          const uploadRes = await axios.put(endpoint, file.buffer, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": file.mimetype,
+            },
+          });
+          attachments.push({
+            name: file.originalname,
+            driveItemId: uploadRes.data.id,
+            mimeType: file.mimetype,
+          });
+        } catch (err) {
+          console.error(`Failed to upload ${file.originalname}:`, err.response?.data || err.message);
+        }
+      }
+      ticketData.attachments = attachments;
+    } catch (tokenErr) {
+      console.error("Failed to get token for OneDrive upload:", tokenErr.message);
+    }
+  }
+
+  const ticket = await Ticket.create(ticketData);
 
   // ── Email 1: Notify itsupport@cleantechsolar.com (always) ──────────────
   try {
