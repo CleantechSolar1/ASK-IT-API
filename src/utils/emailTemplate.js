@@ -80,6 +80,7 @@ const ticketCreatedTemplate = (ticket) =>
       ${ticket.subCategory ? `<tr><td>Sub-Category</td><td>${ticket.subCategory}</td></tr>` : ""}
       <tr><td>Priority</td><td>${priorityBadge(ticket.priority)}</td></tr>
       <tr><td>Status</td><td>${statusBadge(ticket.status)}</td></tr>
+      <tr><td>Assigned To</td><td>${ticket.assignedToName || "—"}</td></tr>
       <tr><td>Submitted</td><td>${new Date(ticket.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</td></tr>
     </table>
 
@@ -106,6 +107,7 @@ const adminNotificationTemplate = (ticket) =>
       ${ticket.subCategory ? `<tr><td>Sub-Category</td><td>${ticket.subCategory}</td></tr>` : ""}
       <tr><td>Priority</td><td>${priorityBadge(ticket.priority)}</td></tr>
       <tr><td>Status</td><td>${statusBadge(ticket.status)}</td></tr>
+      <tr><td>Assigned To</td><td>${ticket.assignedToName || "—"} (${ticket.assignedToEmail || "—"})</td></tr>
       <tr><td>Created</td><td>${new Date(ticket.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</td></tr>
     </table>
 

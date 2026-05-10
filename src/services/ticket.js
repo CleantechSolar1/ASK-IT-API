@@ -111,6 +111,20 @@ const createTicketService = async (payload, userId, organizationId, files = null
     console.error("[Ticket] Specialist routing email failed:", error.message);
   }
 
+  // ── Email 3: Acknowledge the user who created the ticket ────────────
+  if (ticket.userEmail) {
+    try {
+      const userHtml = ticketCreatedTemplate(ticket);
+      await sendEmail(
+        ticket.userEmail,
+        `[AskIT] Ticket Received ${ticket.ticketId} — ${ticket.category}`,
+        userHtml,
+      );
+    } catch (error) {
+      console.error("[Ticket] User acknowledgment email failed:", error.message);
+    }
+  }
+
   return ticket;
 };
 
