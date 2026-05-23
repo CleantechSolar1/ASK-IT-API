@@ -99,6 +99,10 @@ const loginService = async (payload) => {
     );
   }
 
+  if (user.isActive === false) {
+    throw new Error("Your account has been deactivated. Please contact your administrator.");
+  }
+
   const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
@@ -216,6 +220,10 @@ const microsoftAuthService = async (code) => {
     );
   }
 
+  if (user.isActive === false) {
+    throw new Error("Your account has been deactivated. Please contact your administrator.");
+  }
+
   // Elevate role if email is in the SubAdmin collection
   const role = await resolveRole(user.role, user.email);
 
@@ -288,6 +296,10 @@ const teamsSSOService = async (teamsToken) => {
         } else if (!user.microsoftId) {
           user.microsoftId = oid;
           await user.save();
+        }
+
+        if (user.isActive === false) {
+          return reject(new Error("Your account has been deactivated. Please contact your administrator."));
         }
 
         // Elevate role if email is in the SubAdmin collection

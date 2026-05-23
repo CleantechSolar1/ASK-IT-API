@@ -22,20 +22,20 @@ router.get("/attachment/:driveItemId", authMiddleware, getAttachment);
 
 router.get("/my", authMiddleware, getMyTickets);
 
-router.get("/admin/export", authMiddleware, adminMiddleware, exportTicketsCSV);
-router.get("/admin", authMiddleware, adminMiddleware, getAllTickets);
+router.get("/admin/export", authMiddleware, adminMiddleware(), exportTicketsCSV);
+router.get("/admin", authMiddleware, adminMiddleware(), getAllTickets);
 
 router.patch(
   "/admin/:id/status",
   authMiddleware,
-  adminMiddleware,
+  adminMiddleware(),
   updateTicketStatus,
 );
 
 router.patch(
   "/admin/:id/delegate",
   authMiddleware,
-  adminMiddleware,
+  adminMiddleware(),
   delegateTicket,
 );
 
