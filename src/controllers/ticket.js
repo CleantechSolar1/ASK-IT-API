@@ -19,11 +19,21 @@ const exportTicketsCSV = async (req, res) => {
       return errorResponse(res, "Session invalid. Please log in again.", 401);
     }
 
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, status, priority, department, assignedTo } = req.query;
+
+    // Parse comma-separated multiselect values from the query string
+    const filters = {
+      status: status ? status.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      priority: priority ? priority.split(",").map((p) => p.trim()).filter(Boolean) : [],
+      department: department ? department.split(",").map((d) => d.trim()).filter(Boolean) : [],
+      assignedTo: assignedTo ? assignedTo.split(",").map((a) => a.trim()).filter(Boolean) : [],
+    };
+
     const tickets = await getTicketsByDateRangeService(
       organizationId,
       startDate,
       endDate,
+      filters,
     );
 
     // Define CSV headers

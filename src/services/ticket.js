@@ -148,12 +148,14 @@ const getTicketsByDateRangeService = async (
   organizationId,
   startDate,
   endDate,
+  filters = {},
 ) => {
   const mongoose = require("mongoose");
   const query = {
     organizationId: new mongoose.Types.ObjectId(organizationId),
   };
 
+  // Date range
   if (startDate || endDate) {
     query.createdAt = {};
     if (startDate) query.createdAt.$gte = new Date(startDate);
@@ -165,6 +167,40 @@ const getTicketsByDateRangeService = async (
       }
       query.createdAt.$lte = end;
     }
+  }
+
+  // Multi-select status filter
+  // "Open" is a virtual value meaning any status that is NOT "Completed"
+  if (filters.status && filters.status.length > 0) {
+    const hasOpen = filters.status.includes("Open");
+    const explicitStatuses = filters.status.filter((s) => s !== "Open");
+
+    if (hasOpen && explicitStatuses.length > 0) {
+      // Open OR explicit statuses
+      query.$or = [
+        { status: { $ne: "Completed" } },
+        { status: { $in: explicitStatuses } },
+      ];
+    } else if (hasOpen) {
+      query.status = { $ne: "Completed" };
+    } else {
+      query.status = { $in: explicitStatuses };
+    }
+  }
+
+  // Multi-select priority filter
+  if (filters.priority && filters.priority.length > 0) {
+    query.priority = { $in: filters.priority };
+  }
+
+  // Multi-select department filter
+  if (filters.department && filters.department.length > 0) {
+    query.department = { $in: filters.department };
+  }
+
+  // Multi-select assignedTo filter
+  if (filters.assignedTo && filters.assignedTo.length > 0) {
+    query.assignedToEmail = { $in: filters.assignedTo };
   }
 
   const tickets = await Ticket.find(query)
