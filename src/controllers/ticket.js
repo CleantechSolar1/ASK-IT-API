@@ -1,7 +1,9 @@
 const {
   createTicketService,
+  getTicketByIdService,
   getUserTicketsService,
   getAllTicketsService,
+  addTicketCommentService,
   updateTicketStatusService,
   delegateTicketService,
   getTicketsByDateRangeService,
@@ -159,6 +161,22 @@ const getAttachment = async (req, res) => {
   }
 };
 
+const getTicketById = async (req, res) => {
+  try {
+    const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      return errorResponse(res, "Session invalid. Please log in again.", 401);
+    }
+
+    const ticket = await getTicketByIdService(req.params.id, req.user);
+
+    return successResponse(res, ticket);
+  } catch (error) {
+    const statusCode = error.message === "Ticket not found" ? 404 : 500;
+    return errorResponse(res, error.message, statusCode);
+  }
+};
+
 const getMyTickets = async (req, res) => {
   try {
     const organizationId = req.user.organizationId;
@@ -174,6 +192,32 @@ const getMyTickets = async (req, res) => {
     return successResponse(res, tickets);
   } catch (error) {
     return errorResponse(res, error.message);
+  }
+};
+
+const addTicketComment = async (req, res) => {
+  try {
+    const organizationId = req.user.organizationId;
+    if (!organizationId) {
+      return errorResponse(res, "Session invalid. Please log in again.", 401);
+    }
+
+    const ticket = await addTicketCommentService(
+      req.params.id,
+      organizationId,
+      req.user.id,
+      req.body.comment || req.body.message,
+    );
+
+    return successResponse(res, ticket, "Comment added successfully", 201);
+  } catch (error) {
+    const statusCode =
+      error.message === "Ticket not found"
+        ? 404
+        : error.message === "Comment is required"
+          ? 400
+          : 500;
+    return errorResponse(res, error.message, statusCode);
   }
 };
 
@@ -245,8 +289,10 @@ const delegateTicket = async (req, res) => {
 
 module.exports = {
   createTicket,
+  getTicketById,
   getMyTickets,
   getAllTickets,
+  addTicketComment,
   updateTicketStatus,
   delegateTicket,
   exportTicketsCSV,

@@ -1,10 +1,43 @@
 const mongoose = require("mongoose");
 
+const ticketCommentSchema = new mongoose.Schema(
+  {
+    message: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    authorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    authorName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    authorEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    authorRole: {
+      type: String,
+      enum: ["admin", "subadmin"],
+      required: true,
+    },
+  },
+  { timestamps: true },
+);
+
 const ticketSchema = new mongoose.Schema(
   {
     ticketId: {
       type: String,
       required: true,
+      unique: true,
     },
 
     organizationId: {
@@ -68,6 +101,11 @@ const ticketSchema = new mongoose.Schema(
         mimeType: String,
       },
     ],
+
+    comments: {
+      type: [ticketCommentSchema],
+      default: [],
+    },
   },
   { timestamps: true },
 );

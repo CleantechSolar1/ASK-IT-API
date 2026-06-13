@@ -2,6 +2,7 @@ const Ticket = require("../models/ticket");
 const generateTicketId = require("../utils/generateTicketId");
 const { sendEmail } = require("../services/email");
 const { getRoutingEmail } = require("../utils/emailRouting");
+const mongoose = require("mongoose");
 const {
   ticketCreatedTemplate,
   adminNotificationTemplate,
@@ -15,7 +16,7 @@ const ITSUPPORT_EMAIL =
   process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
 
 const createTicketService = async (payload, userId, organizationId, files = null) => {
-  const ticketId = generateTicketId();
+  const ticketId = await generateTicketId();
 
   const specialistEmail = getRoutingEmail(payload.category, payload.priority);
 
@@ -128,12 +129,82 @@ const createTicketService = async (payload, userId, organizationId, files = null
   return ticket;
 };
 
+const getTicketByIdService = async (ticketId, requester) => {
+  if (!mongoose.isValidObjectId(ticketId)) {
+    throw new Error("Ticket not found");
+  }
+
+  const query = {
+    _id: ticketId,
+    organizationId: requester.organizationId,
+  };
+
+  if (requester.role !== "admin") {
+    query.userId = requester.id;
+  }
+
+  const ticket = await Ticket.findOne(query).populate("userId", "name email");
+
+  if (!ticket) {
+    throw new Error("Ticket not found");
+  }
+
+  return ticket;
+};
+
 const getUserTicketsService = async (userId, organizationId) => {
   const tickets = await Ticket.find({ userId, organizationId }).sort({
     createdAt: -1,
   });
 
   return tickets;
+};
+
+const addTicketCommentService = async (
+  ticketId,
+  organizationId,
+  authorId,
+  message,
+) => {
+  const trimmedMessage = typeof message === "string" ? message.trim() : "";
+
+  if (!trimmedMessage) {
+    throw new Error("Comment is required");
+  }
+
+  if (!mongoose.isValidObjectId(ticketId)) {
+    throw new Error("Ticket not found");
+  }
+
+  const ticket = await Ticket.findOne({
+    _id: ticketId,
+    organizationId,
+  });
+
+  if (!ticket) {
+    throw new Error("Ticket not found");
+  }
+
+  const author = await User.findById(authorId).select("name email role");
+  if (!author) {
+    throw new Error("Comment author not found");
+  }
+
+  const subAdmin = await SubAdmin.findOne({
+    email: author.email.toLowerCase(),
+  });
+
+  ticket.comments.push({
+    message: trimmedMessage,
+    authorId: author._id,
+    authorName: author.name,
+    authorEmail: author.email,
+    authorRole: subAdmin ? "subadmin" : "admin",
+  });
+
+  await ticket.save();
+
+  return ticket.populate("userId", "name email");
 };
 
 const getAllTicketsService = async (organizationId) => {
@@ -280,8 +351,10 @@ const delegateTicketService = async (ticketId, newEmail, organizationId) => {
 
 module.exports = {
   createTicketService,
+  getTicketByIdService,
   getUserTicketsService,
   getAllTicketsService,
+  addTicketCommentService,
   updateTicketStatusService,
   delegateTicketService,
   getTicketsByDateRangeService,

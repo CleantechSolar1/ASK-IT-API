@@ -6,8 +6,10 @@ const adminMiddleware = require("../middlewares/checkRole");
 
 const {
   createTicket,
+  getTicketById,
   getMyTickets,
   getAllTickets,
+  addTicketComment,
   updateTicketStatus,
   delegateTicket,
   exportTicketsCSV,
@@ -24,6 +26,7 @@ router.get("/my", authMiddleware, getMyTickets);
 
 router.get("/admin/export", authMiddleware, adminMiddleware(), exportTicketsCSV);
 router.get("/admin", authMiddleware, adminMiddleware(), getAllTickets);
+router.post("/admin/:id/comments", authMiddleware, adminMiddleware(), addTicketComment);
 
 router.patch(
   "/admin/:id/status",
@@ -38,5 +41,7 @@ router.patch(
   adminMiddleware(),
   delegateTicket,
 );
+
+router.get("/:id", authMiddleware, getTicketById);
 
 module.exports = router;
