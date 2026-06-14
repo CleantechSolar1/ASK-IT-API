@@ -8,6 +8,7 @@ const {
   adminNotificationTemplate,
   ticketStatusUpdatedTemplate,
 } = require("../utils/emailTemplate");
+const { sendTeamsTicketNotification } = require("./teamsNotification");
 const User = require("../models/user");
 const SubAdmin = require("../models/subAdmin");
 
@@ -84,6 +85,9 @@ const createTicketService = async (payload, userId, organizationId, files = null
   }
 
   const ticket = await Ticket.create(ticketData);
+
+  // Notify Teams channel via Power Automate without blocking ticket creation.
+  await sendTeamsTicketNotification(ticket);
 
   // ── Email 1: Notify itsupport@cleantechsolar.com (always) ──────────────
   try {
