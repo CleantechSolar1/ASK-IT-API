@@ -50,6 +50,8 @@ const exportTicketsCSV = async (req, res) => {
       "Department",
       "Country",
       "Status",
+      "Last Action By",
+      "Last Action At",
       "Assigned To",
       "Assigned To Email",
       "Description",
@@ -67,6 +69,8 @@ const exportTicketsCSV = async (req, res) => {
       t.department || "",
       t.country || "",
       t.status || "",
+      t.lastActionBy?.name || "",
+      t.lastActionBy?.at ? new Date(t.lastActionBy.at).toLocaleString() : "",
       t.assignedToName || "",
       t.assignedToEmail || "",
       t.description || "",
@@ -253,6 +257,7 @@ const updateTicketStatus = async (req, res) => {
       req.params.id,
       req.body.status,
       organizationId,
+      req.user.id,
     );
 
     return successResponse(res, ticket, "Ticket status updated");
@@ -279,6 +284,7 @@ const delegateTicket = async (req, res) => {
       req.params.id,
       email,
       organizationId,
+      req.user.id,
     );
 
     return successResponse(res, ticket, "Ticket delegated successfully");

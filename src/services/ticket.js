@@ -16,6 +16,43 @@ const SubAdmin = require("../models/subAdmin");
 const ITSUPPORT_EMAIL =
   process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
 
+const getTicketActor = async (actorId) => {
+  if (!actorId) return null;
+
+  const actor = await User.findById(actorId).select("name email");
+  if (!actor) {
+    throw new Error("Action user not found");
+  }
+
+  return {
+    userId: actor._id,
+    name: actor.name,
+    email: actor.email,
+  };
+};
+
+const recordTicketAction = (ticket, actor, action, details = {}) => {
+  const actionAt = new Date();
+
+  ticket.lastActionBy = {
+    userId: actor.userId,
+    name: actor.name,
+    email: actor.email,
+    action,
+    at: actionAt,
+  };
+
+  ticket.actionLogs.push({
+    action,
+    actorId: actor.userId,
+    actorName: actor.name,
+    actorEmail: actor.email,
+    ...details,
+    createdAt: actionAt,
+    updatedAt: actionAt,
+  });
+};
+
 const createTicketService = async (payload, userId, organizationId, files = null) => {
   const ticketId = await generateTicketId();
 
@@ -147,7 +184,12 @@ const getTicketByIdService = async (ticketId, requester) => {
     query.userId = requester.id;
   }
 
-  const ticket = await Ticket.findOne(query).populate("userId", "name email");
+  const ticketQuery = Ticket.findOne(query).populate("userId", "name email");
+  if (requester.role !== "admin") {
+    ticketQuery.select("-actionLogs");
+  }
+
+  const ticket = await ticketQuery;
 
   if (!ticket) {
     throw new Error("Ticket not found");
@@ -157,9 +199,11 @@ const getTicketByIdService = async (ticketId, requester) => {
 };
 
 const getUserTicketsService = async (userId, organizationId) => {
-  const tickets = await Ticket.find({ userId, organizationId }).sort({
-    createdAt: -1,
-  });
+  const tickets = await Ticket.find({ userId, organizationId })
+    .select("-actionLogs")
+    .sort({
+      createdAt: -1,
+    });
 
   return tickets;
 };
@@ -198,13 +242,25 @@ const addTicketCommentService = async (
     email: author.email.toLowerCase(),
   });
 
-  ticket.comments.push({
+  const comment = ticket.comments.create({
     message: trimmedMessage,
     authorId: author._id,
     authorName: author.name,
     authorEmail: author.email,
     authorRole: subAdmin ? "subadmin" : "admin",
   });
+
+  ticket.comments.push(comment);
+  recordTicketAction(
+    ticket,
+    {
+      userId: author._id,
+      name: author.name,
+      email: author.email,
+    },
+    "commented",
+    { commentId: comment._id },
+  );
 
   await ticket.save();
 
@@ -285,7 +341,12 @@ const getTicketsByDateRangeService = async (
   return tickets;
 };
 
-const updateTicketStatusService = async (ticketId, status, organizationId) => {
+const updateTicketStatusService = async (
+  ticketId,
+  status,
+  organizationId,
+  actorId,
+) => {
   const ticket = await Ticket.findOne({
     _id: ticketId,
     organizationId,
@@ -295,7 +356,14 @@ const updateTicketStatusService = async (ticketId, status, organizationId) => {
     throw new Error("Ticket not found");
   }
 
+  const previousStatus = ticket.status;
+  const actor = await getTicketActor(actorId);
+
   ticket.status = status;
+  recordTicketAction(ticket, actor, "status_updated", {
+    fromStatus: previousStatus,
+    toStatus: status,
+  });
   await ticket.save();
 
   // Notify the user who raised the ticket
@@ -315,7 +383,12 @@ const updateTicketStatusService = async (ticketId, status, organizationId) => {
   return ticket.populate("userId", "name email");
 };
 
-const delegateTicketService = async (ticketId, newEmail, organizationId) => {
+const delegateTicketService = async (
+  ticketId,
+  newEmail,
+  organizationId,
+  actorId,
+) => {
   const ticket = await Ticket.findOne({
     _id: ticketId,
     organizationId,
@@ -325,6 +398,9 @@ const delegateTicketService = async (ticketId, newEmail, organizationId) => {
     throw new Error("Ticket not found");
   }
 
+  const previousAssigneeEmail = ticket.assignedToEmail;
+  const previousAssigneeName = ticket.assignedToName;
+  const actor = await getTicketActor(actorId);
   let assignedToName = "Unknown";
   const adminUser = await User.findOne({ email: newEmail.toLowerCase() });
   if (adminUser) {
@@ -336,6 +412,12 @@ const delegateTicketService = async (ticketId, newEmail, organizationId) => {
 
   ticket.assignedToEmail = newEmail;
   ticket.assignedToName = assignedToName;
+  recordTicketAction(ticket, actor, "delegated", {
+    delegatedFromEmail: previousAssigneeEmail,
+    delegatedFromName: previousAssigneeName,
+    delegatedToEmail: newEmail,
+    delegatedToName: assignedToName,
+  });
   await ticket.save();
 
   // Send notification to the new assignee

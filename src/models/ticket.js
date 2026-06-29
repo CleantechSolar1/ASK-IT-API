@@ -32,6 +32,86 @@ const ticketCommentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+const ticketActionBySchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    name: {
+      type: String,
+      trim: true,
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    action: {
+      type: String,
+      enum: ["commented", "status_updated", "delegated"],
+    },
+    at: {
+      type: Date,
+    },
+  },
+  { _id: false },
+);
+
+const ticketActionLogSchema = new mongoose.Schema(
+  {
+    action: {
+      type: String,
+      enum: ["commented", "status_updated", "delegated"],
+      required: true,
+    },
+    actorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    actorName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    actorEmail: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    fromStatus: {
+      type: String,
+    },
+    toStatus: {
+      type: String,
+    },
+    delegatedFromEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    delegatedFromName: {
+      type: String,
+      trim: true,
+    },
+    delegatedToEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    delegatedToName: {
+      type: String,
+      trim: true,
+    },
+    commentId: {
+      type: mongoose.Schema.Types.ObjectId,
+    },
+  },
+  { timestamps: true },
+);
+
 const ticketSchema = new mongoose.Schema(
   {
     ticketId: {
@@ -104,6 +184,16 @@ const ticketSchema = new mongoose.Schema(
 
     comments: {
       type: [ticketCommentSchema],
+      default: [],
+    },
+
+    lastActionBy: {
+      type: ticketActionBySchema,
+      default: null,
+    },
+
+    actionLogs: {
+      type: [ticketActionLogSchema],
       default: [],
     },
   },
