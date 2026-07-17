@@ -130,7 +130,8 @@ const createTicket = async (req, res) => {
       req.body,
       req.user.id,
       organizationId,
-      req.files // Pass files to service
+      req.files, // Pass files to service
+      req.user.role,
     );
 
     return successResponse(res, ticket, "Ticket created successfully", 201);

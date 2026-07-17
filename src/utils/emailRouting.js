@@ -6,7 +6,7 @@
  *   ROUTING_MAP[category][priority] = recipientEmail
  *
  * Categories (case-insensitive match applied in getRoutingEmail):
- *   	Hardware Issue | Salesforce | SharePoint | Business Central | Application | VPN | System Issue
+ *   	Hardware Issue | Salesforce | SharePoint | Business Central | Application | VPN | System Issue | Sim Card
  *
  * Priorities: High | Medium | Low
  */
@@ -46,6 +46,11 @@ const ROUTING_MAP = {
     high: "satish.malusare@cleantechsolar.com",
     medium: "niraj.raut@cleantechsolar.com",
     low: "jasper.chan@cleantechsolar.com",
+  },
+  "sim card": {
+    high: "satish.malusare@cleantechsolar.com",
+    medium: "satish.malusare@cleantechsolar.com",
+    low: "satish.malusare@cleantechsolar.com",
   },
   "power bi": {
     high: "sameer.mishra@cleantechsolar.com",

@@ -15,6 +15,8 @@ const SubAdmin = require("../models/subAdmin");
 // Always-notify admin inbox
 const ITSUPPORT_EMAIL =
   process.env.ITSUPPORT_EMAIL || "itsupport@cleantechsolar.com";
+const ALLETECH_PRIORITY = "alletech";
+const ALLETECH_ASSIGNEE = "Alletech";
 
 const getTicketActor = async (actorId) => {
   if (!actorId) return null;
@@ -53,12 +55,26 @@ const recordTicketAction = (ticket, actor, action, details = {}) => {
   });
 };
 
-const createTicketService = async (payload, userId, organizationId, files = null) => {
+const createTicketService = async (
+  payload,
+  userId,
+  organizationId,
+  files = null,
+  requesterRole = "user",
+) => {
   const ticketId = await generateTicketId();
+  const isAlletechPriority =
+    String(payload.priority || "").trim().toLowerCase() === ALLETECH_PRIORITY;
 
-  const specialistEmail = getRoutingEmail(payload.category, payload.priority);
+  if (isAlletechPriority && requesterRole !== "admin") {
+    throw new Error("Only admins can create Alletech priority tickets");
+  }
 
-  let assignedToName = "Unassigned";
+  const specialistEmail = isAlletechPriority
+    ? null
+    : getRoutingEmail(payload.category, payload.priority);
+
+  let assignedToName = isAlletechPriority ? ALLETECH_ASSIGNEE : "Unassigned";
   if (specialistEmail) {
     const adminUser = await User.findOne({
       email: specialistEmail.toLowerCase(),
@@ -84,7 +100,9 @@ const createTicketService = async (payload, userId, organizationId, files = null
     description: payload.description,
     department: payload.department,
     country: payload.country,
-    assignedToEmail: specialistEmail || ITSUPPORT_EMAIL,
+    assignedToEmail: isAlletechPriority
+      ? undefined
+      : specialistEmail || ITSUPPORT_EMAIL,
     assignedToName: assignedToName,
   };
 
@@ -140,7 +158,9 @@ const createTicketService = async (payload, userId, organizationId, files = null
 
   // ── Email 2: Route to specialist based on category + priority ───────────
   try {
-    const specialistEmail = getRoutingEmail(ticket.category, ticket.priority);
+    const specialistEmail = isAlletechPriority
+      ? null
+      : getRoutingEmail(ticket.category, ticket.priority);
     if (specialistEmail && specialistEmail !== ITSUPPORT_EMAIL) {
       const specialistHtml = adminNotificationTemplate(ticket);
       await sendEmail(
