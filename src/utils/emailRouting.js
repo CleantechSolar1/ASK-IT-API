@@ -29,7 +29,7 @@ const ROUTING_MAP = {
   },
   "business central": {
     high: "sameer.mishra@cleantechsolar.com",
-    medium: "nutchaphon.p@cleantechsolar.com",
+    medium: "rajmani.thakur@cleantechsolar.com",
     low: "nutchaphon.p@cleantechsolar.com",
   },
   application: {

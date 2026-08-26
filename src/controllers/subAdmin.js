@@ -1,11 +1,11 @@
 const SubAdmin = require("../models/subAdmin");
 const { successResponse, errorResponse } = require("../middlewares/responseHandler");
 
-const MAX_SUB_ADMINS = 6;
+const MAX_SUB_ADMINS = 7;
 
 /**
  * POST /sub-admins
- * Add a new sub-admin email (admin-only). Max 6 allowed.
+ * Add a new sub-admin email (admin-only). Max 7 allowed.
  */
 const addSubAdmin = async (req, res) => {
   try {
