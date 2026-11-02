@@ -15,7 +15,7 @@ const ROUTING_MAP = {
   "hardware issue": {
     high: "satish.malusare@cleantechsolar.com",
     medium: "niraj.raut@cleantechsolar.com",
-    low: "jasper.chan@cleantechsolar.com",
+    low: "niraj.raut@cleantechsolar.com",
   },
   salesforce: {
     high: "sameer.mishra@cleantechsolar.com",
@@ -25,7 +25,7 @@ const ROUTING_MAP = {
   sharepoint: {
     high: "satish.malusare@cleantechsolar.com",
     medium: "niraj.raut@cleantechsolar.com",
-    low: "jasper.chan@cleantechsolar.com",
+    low: "niraj.raut@cleantechsolar.com",
   },
   "business central": {
     high: "sameer.mishra@cleantechsolar.com",
@@ -35,17 +35,17 @@ const ROUTING_MAP = {
   application: {
     high: "satish.malusare@cleantechsolar.com",
     medium: "niraj.raut@cleantechsolar.com",
-    low: "jasper.chan@cleantechsolar.com",
+    low: "niraj.raut@cleantechsolar.com",
   },
   vpn: {
     high: "satish.malusare@cleantechsolar.com",
     medium: "niraj.raut@cleantechsolar.com",
-    low: "jasper.chan@cleantechsolar.com",
+    low: "niraj.raut@cleantechsolar.com",
   },
   "system issue": {
     high: "satish.malusare@cleantechsolar.com",
     medium: "niraj.raut@cleantechsolar.com",
-    low: "jasper.chan@cleantechsolar.com",
+    low: "niraj.raut@cleantechsolar.com",
   },
   "sim card": {
     high: "satish.malusare@cleantechsolar.com",
