@@ -7,6 +7,7 @@ const authRoutes = require("./src/routes/auth");
 const ticketRoutes = require("./src/routes/ticket");
 const issueCategoryRoutes = require("./src/routes/issueCategory");
 const subAdminRoutes = require("./src/routes/subAdmin");
+const emailRoutingRoutes = require("./src/routes/emailRouting");
 const userRoutes = require("./src/routes/user");
 
 dotenv.config();
@@ -78,6 +79,7 @@ app.use("/auth", authRoutes);
 app.use("/tickets", ticketRoutes);
 app.use("/categories", issueCategoryRoutes);
 app.use("/sub-admins", subAdminRoutes);
+app.use("/email-routing", emailRoutingRoutes);
 app.use("/users", userRoutes);
 
 app.get("/", (req, res) => {

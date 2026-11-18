@@ -1,7 +1,7 @@
 const Ticket = require("../models/ticket");
 const generateTicketId = require("../utils/generateTicketId");
 const { sendEmail } = require("../services/email");
-const { getRoutingEmail } = require("../utils/emailRouting");
+const { getRoutingEmail } = require("./emailRouting");
 const mongoose = require("mongoose");
 const {
   ticketCreatedTemplate,
@@ -70,9 +70,14 @@ const createTicketService = async (
     throw new Error("Only admins can create Alletech priority tickets");
   }
 
-  const specialistEmail = isAlletechPriority
-    ? null
-    : getRoutingEmail(payload.category, payload.priority);
+  let specialistEmail = null;
+  if (!isAlletechPriority) {
+    try {
+      specialistEmail = await getRoutingEmail(payload.category, payload.priority);
+    } catch (error) {
+      console.error("[Ticket] Email routing lookup failed:", error.message);
+    }
+  }
 
   let assignedToName = isAlletechPriority ? ALLETECH_ASSIGNEE : "Unassigned";
   if (specialistEmail) {
@@ -158,10 +163,7 @@ const createTicketService = async (
 
   // ── Email 2: Route to specialist based on category + priority ───────────
   try {
-    const specialistEmail = isAlletechPriority
-      ? null
-      : getRoutingEmail(ticket.category, ticket.priority);
-    if (specialistEmail && specialistEmail !== ITSUPPORT_EMAIL) {
+    if (specialistEmail && specialistEmail.toLowerCase() !== ITSUPPORT_EMAIL.toLowerCase()) {
       const specialistHtml = adminNotificationTemplate(ticket);
       await sendEmail(
         specialistEmail,
